@@ -6,25 +6,35 @@ class AuthService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Sign Up Function
-  Future<User?> signUp(String email, String password, String role) async {
+  Future<User?> signUp(String email, String password, String role, String language) async {
     try {
+      // 1. Create the user in Firebase Authentication
       UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email, password: password);
+          email: email, 
+          password: password
+      );
     
-      // Save the user role to Firestore
+      // 2. Save the user details to Firestore
+      // We are adding 'language' and 'status' for your research goals
       await _db.collection('users').doc(result.user!.uid).set({
         'email': email,
         'role': role,
+        'language': language,      // 'English' or 'Egyptian Arabic'
+        'status': 'Normal',        // Default status for sensors
+        'lastMovement': DateTime.now(), // Timestamp for activity monitoring
+        'linkedUser': null,        // Placeholder for Caregiver/Patient connection
       });
 
-    return result.user;
-  } on FirebaseAuthException catch (e) {
-    // This sends the specific Firebase error message back to your screen
-    throw e.message ?? "An unknown error occurred.";
-  } catch (e) {
-    throw "An unexpected error occurred.";
+      return result.user;
+    } on FirebaseAuthException catch (e) {
+      // Passes specific Firebase errors (e.g., "Email already in use") to the UI
+      throw e.message ?? "An unknown error occurred.";
+    } catch (e) {
+      throw "An unexpected error occurred.";
+    }
   }
-}
+
+  
   // Login Function
   Future<User?> login(String email, String password) async {
     try {
