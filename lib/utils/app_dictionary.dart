@@ -7,6 +7,9 @@ class AppDictionary {
       'welcome_caregiver': 'Monitoring Patient Status...',
       'help_btn': 'I NEED HELP',
       'logout': 'Logout',
+      'link_success': 'Linked successfully!',
+      'link_not_found': 'Patient email not found.',
+      'link_error': 'An error occurred during linking.',
     },
     'Egyptian Arabic': {
       'patient_title': 'لوحة تحكم المريض',
@@ -15,6 +18,9 @@ class AppDictionary {
       'welcome_caregiver': 'بـنـتـابع حالة المريض دلوقتي...',
       'help_btn': 'إلـحـقـنـي',
       'logout': 'خروج',
+      'link_success': 'تم الربط بنجاح!',
+      'link_not_found': 'الايميل ده مش موجود عندنا.',
+      'link_error': 'حصل مشكلة واحنا بنربط الحساب.',
     }
   };
 
