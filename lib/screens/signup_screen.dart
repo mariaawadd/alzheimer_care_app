@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+// ADD THESE TWO IMPORTS
+import 'caregiver_home.dart';
+import 'patient_home.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -41,9 +44,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // This calls the logic we wrote earlier!
-                await AuthService().signUp(_emailController.text, _passwordController.text, _selectedRole);
-                print("User Created as $_selectedRole");
+                // 1. Call the sign-up logic
+                var user = await AuthService().signUp(
+                  _emailController.text, 
+                  _passwordController.text, 
+                  _selectedRole
+                );
+
+                // 2. Check if the user was created successfully
+                if (user != null && mounted) {
+                  // 3. Navigate to the correct screen based on role
+                  if (_selectedRole == 'Caregiver') {
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (context) => CaregiverHome())
+                    );
+                  } else {
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(builder: (context) => PatientHome())
+                    );
+                  }
+                }
               },
               child: Text("Sign Up"),
             ),

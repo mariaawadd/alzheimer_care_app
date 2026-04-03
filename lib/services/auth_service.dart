@@ -27,4 +27,21 @@ class AuthService {
       return null;
     }
   }
+  // Login Function
+  Future<User?> login(String email, String password) async {
+    try {
+      UserCredential result = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      return result.user;
+    } catch (e) {
+      print("Login Error: $e");
+      return null;
+    }
+  }
+
+  // Get User Role from Firestore
+  Future<String?> getUserRole(String uid) async {
+    DocumentSnapshot doc = await _db.collection('users').doc(uid).get();
+    return doc['role'];
+  }
 }
