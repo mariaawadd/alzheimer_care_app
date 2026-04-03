@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-// ADD THESE TWO IMPORTS
+import 'login_screen.dart';
 import 'caregiver_home.dart';
 import 'patient_home.dart';
 
@@ -68,6 +68,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 }
               },
               child: Text("Sign Up"),
+            ),
+            SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => LoginScreen())
+                );
+              },
+              child: Text("Already have an account? Login here"),
             ),
           ],
         ),
