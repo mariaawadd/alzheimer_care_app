@@ -36,6 +36,10 @@ class AuthService {
       return null;
     }
   }
+  // Sign Out Method
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 
   // Get User Role from Firestore
   Future<String?> getUserRole(String uid) async {
