@@ -22,8 +22,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(controller: _emailController, decoration: InputDecoration(labelText: "Email")),
-            TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
+            TextField(
+              controller: _emailController, 
+              decoration: InputDecoration(labelText: "Email")
+            ),
+            TextField(
+              controller: _passwordController, 
+              decoration: InputDecoration(labelText: "Password"), 
+              obscureText: true
+            ),
             SizedBox(height: 20),
             Text("I am a:"),
             ListTile(
@@ -44,25 +51,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // 1. Call the sign-up logic
-                var user = await AuthService().signUp(
-                  _emailController.text, 
-                  _passwordController.text, 
-                  _selectedRole
-                );
+                try {
+                  // 1. Attempt the sign-up logic
+                  var user = await AuthService().signUp(
+                    _emailController.text, 
+                    _passwordController.text, 
+                    _selectedRole
+                  );
 
-                // 2. Check if the user was created successfully
-                if (user != null && mounted) {
-                  // 3. Navigate to the correct screen based on role
-                  if (_selectedRole == 'Caregiver') {
-                    Navigator.pushReplacement(
-                      context, 
-                      MaterialPageRoute(builder: (context) => CaregiverHome())
-                    );
-                  } else {
-                    Navigator.pushReplacement(
-                      context, 
-                      MaterialPageRoute(builder: (context) => PatientHome())
+                  // 2. If user is created successfully, navigate based on role
+                  if (user != null && mounted) {
+                    if (_selectedRole == 'Caregiver') {
+                      Navigator.pushReplacement(
+                        context, 
+                        MaterialPageRoute(builder: (context) => CaregiverHome())
+                      );
+                    } else {
+                      Navigator.pushReplacement(
+                        context, 
+                        MaterialPageRoute(builder: (context) => PatientHome())
+                      );
+                    }
+                  }
+                } catch (errorMessage) {
+                  // 3. Catch any Firebase errors and show them in a red SnackBar
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage.toString()),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
                     );
                   }
                 }
