@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'caregiver_home.dart';
-import 'patient_home.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -12,17 +10,22 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  String _selectedRole = 'Caregiver'; 
+
+  String _selectedRole = 'Caregiver';
   String _selectedLanguage = 'English'; // New state variable
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_selectedLanguage == 'English' ? "Create Account" : "إنشاء حساب")),
+      appBar: AppBar(
+        title: Text(
+          _selectedLanguage == 'English' ? "Create Account" : "إنشاء حساب",
+        ),
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: SingleChildScrollView( // Added scrollview to prevent overflow with keyboard
+        child: SingleChildScrollView(
+          // Added scrollview to prevent overflow with keyboard
           child: Column(
             children: [
               // --- LANGUAGE SELECTOR ---
@@ -40,7 +43,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     DropdownButton<String>(
                       value: _selectedLanguage,
                       underline: SizedBox(), // Removes the default underline
-                      items: <String>['English', 'Egyptian Arabic'].map((String value) {
+                      items: <String>['English', 'Egyptian Arabic'].map((
+                        String value,
+                      ) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -56,30 +61,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              
+
               // --- INPUT FIELDS ---
               TextField(
-                controller: _emailController, 
+                controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: _selectedLanguage == 'English' ? "Email" : "الايميل",
-                )
+                  labelText: _selectedLanguage == 'English'
+                      ? "Email"
+                      : "الايميل",
+                ),
               ),
               TextField(
-                controller: _passwordController, 
+                controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: _selectedLanguage == 'English' ? "Password" : "كلمة السر",
-                ), 
-                obscureText: true
+                  labelText: _selectedLanguage == 'English'
+                      ? "Password"
+                      : "كلمة السر",
+                ),
+                obscureText: true,
               ),
               SizedBox(height: 20),
-              
+
               // --- ROLE SELECTION ---
               Text(
-                _selectedLanguage == 'English' ? "I am a:" : "أنا بستخدم التطبيق كـ:",
+                _selectedLanguage == 'English'
+                    ? "I am a:"
+                    : "أنا بستخدم التطبيق كـ:",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               ListTile(
-                title: Text(_selectedLanguage == 'English' ? 'Caregiver' : 'مرافق (Caregiver)'),
+                title: Text(
+                  _selectedLanguage == 'English'
+                      ? 'Caregiver'
+                      : 'مرافق (Caregiver)',
+                ),
                 leading: Radio<String>(
                   value: 'Caregiver',
                   groupValue: _selectedRole,
@@ -87,7 +102,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               ListTile(
-                title: Text(_selectedLanguage == 'English' ? 'Patient' : 'مريض (Patient)'),
+                title: Text(
+                  _selectedLanguage == 'English' ? 'Patient' : 'مريض (Patient)',
+                ),
                 leading: Radio<String>(
                   value: 'Patient',
                   groupValue: _selectedRole,
@@ -101,27 +118,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: ElevatedButton.styleFrom(minimumSize: Size(200, 50)),
                 onPressed: () async {
                   try {
-                    // We pass both role AND language to the service
-                    var user = await AuthService().signUp(
-                      _emailController.text, 
-                      _passwordController.text, 
+                    // AuthWrapper listens to auth changes and routes automatically.
+                    await AuthService().signUp(
+                      _emailController.text,
+                      _passwordController.text,
                       _selectedRole,
-                      _selectedLanguage // Added this argument
+                      _selectedLanguage, // Added this argument
                     );
-
-                    if (user != null && mounted) {
-                      if (_selectedRole == 'Caregiver') {
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => CaregiverHome())
-                        );
-                      } else {
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (context) => PatientHome())
-                        );
-                      }
-                    }
                   } catch (errorMessage) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -134,21 +137,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     }
                   }
                 },
-                child: Text(_selectedLanguage == 'English' ? "Sign Up" : "تسجيل"),
+                child: Text(
+                  _selectedLanguage == 'English' ? "Sign Up" : "تسجيل",
+                ),
               ),
-              
+
               SizedBox(height: 10),
               TextButton(
                 onPressed: () {
                   Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (context) => LoginScreen())
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
                   );
                 },
                 child: Text(
-                  _selectedLanguage == 'English' 
-                  ? "Already have an account? Login here" 
-                  : "عندك حساب أصلاً؟ ادخل من هنا"
+                  _selectedLanguage == 'English'
+                      ? "Already have an account? Login here"
+                      : "عندك حساب أصلاً؟ ادخل من هنا",
                 ),
               ),
             ],

@@ -10,14 +10,18 @@ class CaregiverHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final TextEditingController _emailSearchController = TextEditingController();
+    final TextEditingController _emailSearchController =
+        TextEditingController();
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         String lang = 'English';
         String? linkedUserId;
-        
+
         if (snapshot.hasData && snapshot.data!.exists) {
           lang = snapshot.data!['language'] ?? 'English';
           linkedUserId = snapshot.data!['linkedUser'];
@@ -25,6 +29,7 @@ class CaregiverHome extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: Text(AppDictionary.getString(lang, 'caregiver_title')),
             backgroundColor: Colors.teal,
             actions: [
@@ -42,23 +47,28 @@ class CaregiverHome extends StatelessWidget {
               children: [
                 Text(
                   AppDictionary.getString(lang, 'welcome_caregiver'),
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 20),
 
                 // --- LINKING SECTION ---
                 if (linkedUserId == null) ...[
                   Text(
-                    lang == 'English' 
-                    ? "Connect to a Patient's account:" 
-                    : "اربط حسابك بحساب المريض:",
+                    lang == 'English'
+                        ? "Connect to a Patient's account:"
+                        : "اربط حسابك بحساب المريض:",
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _emailSearchController,
                     decoration: InputDecoration(
-                      hintText: lang == 'English' ? "Patient Email" : "إيميل المريض",
+                      hintText: lang == 'English'
+                          ? "Patient Email"
+                          : "إيميل المريض",
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.person_add, color: Colors.teal),
@@ -66,18 +76,21 @@ class CaregiverHome extends StatelessWidget {
                           if (_emailSearchController.text.isNotEmpty) {
                             // 1. Get the key from the service
                             String resultKey = await AuthService().linkByEmail(
-                              _emailSearchController.text
+                              _emailSearchController.text,
                             );
 
                             // 2. Look up the translation using the dictionary
-                            String message = AppDictionary.getString(lang, resultKey);
+                            String message = AppDictionary.getString(
+                              lang,
+                              resultKey,
+                            );
 
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(message),
-                                  backgroundColor: resultKey == "link_success" 
-                                      ? Colors.green 
+                                  backgroundColor: resultKey == "link_success"
+                                      ? Colors.green
                                       : Colors.redAccent,
                                   behavior: SnackBarBehavior.floating,
                                 ),
@@ -100,18 +113,25 @@ class CaregiverHome extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.check_circle, color: Colors.teal, size: 40),
-                        const SizedBox(height: 10),
-                        Text(
-                          lang == 'English' 
-                              ? "Linked to Patient" 
-                              : "تم الربط مع المريض",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.teal,
+                          size: 40,
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          lang == 'English' 
-                              ? "Status: Monitoring..." 
+                          lang == 'English'
+                              ? "Linked to Patient"
+                              : "تم الربط مع المريض",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          lang == 'English'
+                              ? "Status: Monitoring..."
                               : "الحالة: جاري المتابعة...",
                           style: const TextStyle(color: Colors.grey),
                         ),

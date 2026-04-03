@@ -12,7 +12,10 @@ class PatientHome extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user?.uid).get(),
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .get(),
       builder: (context, snapshot) {
         // Default to English while the database is loading
         String lang = 'English';
@@ -22,6 +25,7 @@ class PatientHome extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: Text(AppDictionary.getString(lang, 'patient_title')),
             backgroundColor: Colors.blueAccent,
             actions: [
@@ -40,7 +44,10 @@ class PatientHome extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   AppDictionary.getString(lang, 'welcome_patient'),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
@@ -49,12 +56,21 @@ class PatientHome extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 30),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 60,
+                      vertical: 30,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   child: Text(
                     AppDictionary.getString(lang, 'help_btn'),
-                    style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

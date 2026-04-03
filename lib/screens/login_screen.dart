@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'caregiver_home.dart';
-import 'patient_home.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -20,19 +18,39 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(controller: _emailController, decoration: InputDecoration(labelText: "Email")),
-            TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                var user = await AuthService().login(_emailController.text, _passwordController.text);
-                if (user != null) {
-                  String? role = await AuthService().getUserRole(user.uid);
-                  if (role == 'Caregiver') {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CaregiverHome()));
-                  } else {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PatientHome()));
+                try {
+                  await AuthService().login(
+                    _emailController.text.trim(),
+                    _passwordController.text,
+                  );
+
+                  if (!mounted) return;
+
+                  // Return to AuthWrapper route; it will route to the correct home.
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
                   }
+                } catch (errorMessage) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage.toString()),
+                      backgroundColor: Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               },
               child: Text("Login"),
