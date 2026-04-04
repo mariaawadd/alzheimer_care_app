@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../services/auth_service.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,8 +15,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const _savedAccountsKey = 'saved_login_accounts';
+
+  final _storage = const FlutterSecureStorage();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  bool _saveCurrentAccount = false;
+  List<_SavedAccount> _savedAccounts = [];
+  String? _selectedAccountEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
 
   @override
   void dispose() {
@@ -22,8 +38,90 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _loadSavedCredentials() async {
+    final savedAccountsJson = await _storage.read(key: _savedAccountsKey);
+
+    if (!mounted || savedAccountsJson == null || savedAccountsJson.isEmpty) {
+      return;
+    }
+
+    try {
+      final decoded = jsonDecode(savedAccountsJson);
+
+      if (decoded is! List) {
+        return;
+      }
+
+      final accounts = decoded
+          .whereType<Map>()
+          .map(
+            (entry) => _SavedAccount.fromJson(Map<String, dynamic>.from(entry)),
+          )
+          .where(
+            (account) =>
+                account.email.isNotEmpty && account.password.isNotEmpty,
+          )
+          .toList();
+
+      if (accounts.isEmpty) {
+        return;
+      }
+
+      final firstAccount = accounts.first;
+      setState(() {
+        _savedAccounts = accounts;
+        _selectedAccountEmail = firstAccount.email;
+        _emailController.text = firstAccount.email;
+        _passwordController.text = firstAccount.password;
+        _saveCurrentAccount = true;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _saveCurrentAccountCredentials() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      return;
+    }
+
+    final updatedAccounts = [
+      _SavedAccount(email: email, password: password),
+      ..._savedAccounts.where((account) => account.email != email),
+    ];
+
+    await _storage.write(
+      key: _savedAccountsKey,
+      value: jsonEncode(
+        updatedAccounts.map((account) => account.toJson()).toList(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _savedAccounts = updatedAccounts;
+      _selectedAccountEmail = email;
+      _saveCurrentAccount = true;
+    });
+  }
+
+  void _selectSavedAccount(_SavedAccount account) {
+    setState(() {
+      _selectedAccountEmail = account.email;
+      _emailController.text = account.email;
+      _passwordController.text = account.password;
+      _saveCurrentAccount = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasSavedAccounts = _savedAccounts.isNotEmpty;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -88,6 +186,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                  return;
+                                }
+
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const SignUpScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                              ),
+                              label: const Text('Back to Sign Up'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF1A237E),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
                           const Text(
                             'Welcome Back',
                             textAlign: TextAlign.center,
@@ -108,6 +232,41 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 22),
+                          DropdownButtonFormField<String>(
+                            value: hasSavedAccounts
+                                ? _selectedAccountEmail
+                                : null,
+                            isExpanded: true,
+                            decoration: _inputDecoration(
+                              'Saved account',
+                              Icons.account_circle_outlined,
+                            ),
+                            hint: const Text('Choose saved account'),
+                            disabledHint: const Text('No saved accounts yet'),
+                            items: _savedAccounts
+                                .map(
+                                  (account) => DropdownMenuItem<String>(
+                                    value: account.email,
+                                    child: Text(account.email),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: hasSavedAccounts
+                                ? (selectedEmail) {
+                                    if (selectedEmail == null) {
+                                      return;
+                                    }
+
+                                    final selectedAccount = _savedAccounts
+                                        .firstWhere(
+                                          (account) =>
+                                              account.email == selectedEmail,
+                                        );
+                                    _selectSavedAccount(selectedAccount);
+                                  }
+                                : null,
+                          ),
+                          const SizedBox(height: 14),
                           TextField(
                             controller: _emailController,
                             decoration: _inputDecoration(
@@ -122,6 +281,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: _inputDecoration(
                               'Password',
                               Icons.lock_outline,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          CheckboxListTile(
+                            value: _saveCurrentAccount,
+                            onChanged: (value) {
+                              setState(() {
+                                _saveCurrentAccount = value ?? false;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: const Text(
+                              'Save this account',
+                              style: TextStyle(
+                                color: Color(0xFF1A237E),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -163,15 +340,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                       _passwordController.text,
                                     );
 
-                                    if (!mounted) {
+                                    if (_saveCurrentAccount) {
+                                      await _saveCurrentAccountCredentials();
+                                    }
+
+                                    if (!context.mounted) {
                                       return;
                                     }
 
-                                    if (Navigator.canPop(context)) {
-                                      Navigator.pop(context);
+                                    if (Navigator.of(context).canPop()) {
+                                      Navigator.of(context).pop();
                                     }
                                   } catch (errorMessage) {
-                                    if (!mounted) {
+                                    if (!context.mounted) {
                                       return;
                                     }
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -241,5 +422,23 @@ class _LoginScreenState extends State<LoginScreen> {
         borderSide: const BorderSide(color: Colors.white70),
       ),
     );
+  }
+}
+
+class _SavedAccount {
+  const _SavedAccount({required this.email, required this.password});
+
+  final String email;
+  final String password;
+
+  factory _SavedAccount.fromJson(Map<String, dynamic> json) {
+    return _SavedAccount(
+      email: json['email'] as String? ?? '',
+      password: json['password'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'email': email, 'password': password};
   }
 }
