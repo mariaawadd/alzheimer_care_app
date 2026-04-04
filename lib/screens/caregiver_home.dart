@@ -54,8 +54,8 @@ class CaregiverHome extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // --- LINKING SECTION ---
                 if (linkedUserId == null) ...[
+                  // --- LINKING SECTION ---
                   Text(
                     lang == 'English'
                         ? "Connect to a Patient's account:"
@@ -66,24 +66,16 @@ class CaregiverHome extends StatelessWidget {
                   TextField(
                     controller: _emailSearchController,
                     decoration: InputDecoration(
-                      hintText: lang == 'English'
-                          ? "Patient Email"
-                          : "إيميل المريض",
+                      hintText: lang == 'English' ? "Patient Email" : "إيميل المريض",
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.person_add, color: Colors.teal),
                         onPressed: () async {
                           if (_emailSearchController.text.isNotEmpty) {
-                            // 1. Get the key from the service
                             String resultKey = await AuthService().linkByEmail(
                               _emailSearchController.text,
                             );
-
-                            // 2. Look up the translation using the dictionary
-                            String message = AppDictionary.getString(
-                              lang,
-                              resultKey,
-                            );
+                            String message = AppDictionary.getString(lang, resultKey);
 
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -102,41 +94,71 @@ class CaregiverHome extends StatelessWidget {
                     ),
                   ),
                 ] else ...[
-                  // --- LINKED PATIENT VIEW ---
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.teal),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          color: Colors.teal,
-                          size: 40,
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          lang == 'English'
-                              ? "Linked to Patient"
-                              : "تم الربط مع المريض",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  // --- REAL-TIME PULSE MONITOR ---
+                  StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(linkedUserId)
+                        .snapshots(),
+                    builder: (context, patientSnapshot) {
+                      if (!patientSnapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      var patientData = patientSnapshot.data!;
+                      String status = patientData['status'] ?? 'Normal';
+                      bool isEmergency = status == 'Emergency';
+
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isEmergency ? Colors.red[100] : Colors.teal.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: isEmergency ? Colors.red : Colors.teal,
+                            width: 2,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          lang == 'English'
-                              ? "Status: Monitoring..."
-                              : "الحالة: جاري المتابعة...",
-                          style: const TextStyle(color: Colors.grey),
+                        child: Column(
+                          children: [
+                            Icon(
+                              isEmergency ? Icons.warning : Icons.check_circle,
+                              color: isEmergency ? Colors.red : Colors.teal,
+                              size: 50,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              isEmergency
+                                  ? (lang == 'English' ? "EMERGENCY DETECTED" : "حالة طوارئ!")
+                                  : (lang == 'English' ? "Patient is Safe" : "المريض بخير"),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: isEmergency ? Colors.red : Colors.black,
+                              ),
+                            ),
+                            if (isEmergency) ...[
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                onPressed: () async {
+                                  // Caregiver can remotely clear the alert
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(linkedUserId)
+                                      .update({'status': 'Normal'});
+                                },
+                                child: Text(
+                                  lang == 'English' ? "Clear Alert" : "إلغاء التنبيه",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ],

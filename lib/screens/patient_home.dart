@@ -17,7 +17,6 @@ class PatientHome extends StatelessWidget {
           .doc(user?.uid)
           .get(),
       builder: (context, snapshot) {
-        // Default to English while the database is loading
         String lang = 'English';
         if (snapshot.hasData && snapshot.data!.exists) {
           lang = snapshot.data!['language'] ?? 'English';
@@ -51,8 +50,20 @@ class PatientHome extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: () {
-                    // Logic for real-time SOS alert will go here
+                  onPressed: () async {
+                    // Trigger the emergency status in Firestore
+                    await AuthService().updateStatus('Emergency');
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            lang == 'English' ? "Alert Sent!" : "تم إرسال التنبيه!",
+                          ),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

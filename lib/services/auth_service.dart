@@ -82,6 +82,19 @@ class AuthService {
     } catch (e) {
       return null;
   }
-}
+} 
+Future<void> updateStatus(String status) async {
+    try {
+      String? uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        await _db.collection('users').doc(uid).update({
+          'status': status,
+          'lastUpdate': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print("Error updating status: $e");
+    }
+  }
 
 }
